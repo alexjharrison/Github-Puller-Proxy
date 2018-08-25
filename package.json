@@ -1,0 +1,32 @@
+{
+  "name": "github-puller-proxy",
+  "version": "1.0.0",
+  "description": "watches for changes in github projects and hosts it",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alexjharrison/Github-Puller-Proxy.git"
+  },
+  "keywords": [
+    "github",
+    "proxy"
+  ],
+  "author": "Alex Harrison",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/alexjharrison/Github-Puller-Proxy/issues"
+  },
+  "homepage": "https://github.com/alexjharrison/Github-Puller-Proxy#readme",
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "express": "^4.16.3",
+    "forever": "^0.15.3",
+    "mysql2": "^1.6.1",
+    "node-cmd": "^3.0.0",
+    "redbird": "^0.7.0"
+  }
+}
