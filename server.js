@@ -23,6 +23,11 @@ var connection = mysql.createConnection({
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended:true}));
 
+app.post("/delete",(req,res)=>{
+	console.log(req.body.proj);
+	cmd.get(`sudo rm -rf /home/pi/code/hosted/*-${req.body.proj}/ `,()=>{})
+})
+
 app.post("/",(req,res)=>{
 	console.log(req.body.repository.name,req.body.sender.login);
 	
@@ -46,7 +51,7 @@ app.post("/",(req,res)=>{
 			console.log(results);
 			newDB ? addProject(results[0]) : updateProject(results[0]);
 		})	
-	},1500);
+	},2000);
 	
 		//make sql db "username-projectname"
 		//make mongodb "username-projectname"
@@ -69,36 +74,65 @@ connection.query(`SELECT * FROM counter`,(err, results) => {
 
 function addProject(dbInfo){
 	let address = dbInfo.username + "-" + dbInfo.repoName;
-	//proxy.register(`${address}.hernoku.us`,`http://127.0.0.1:${portCount}`);
-	//TODO add server info to envs
-	let newEnvs = dbInfo.envs + `\nPORT=${portCount}\nNODE_ENV=production`;
+	proxy.register(`${address}.hernoku.us`,`http://127.0.0.1:${portCount}`);
+	//No longer needed
+	let newEnvs = "\n" + dbInfo.envs + `\nPORT=${portCount}\nNODE_ENV=production` + "\n";
 	connection.query(`UPDATE Projects SET envs = "${newEnvs}" WHERE gitLink = "${dbInfo.gitLink}"`,(err,results)=>{});
+	console.log(address);
 	cmd.get(`
-		cd ~/code/hosted
-		git clone ${dbInfo.gitLink}
-		mv ${dbInfo.repoName} address
+		sudo git clone ${dbInfo.gitLink} /home/pi/code/hosted/${address}
 		`,
 		(err, data, stderr)=>{
-			const relAddr = `../hosted/${address}`;
+			console.log("data",data);
+			console.log("error",err);
+			const relAddr = `/home/pi/code/hosted/${address}/`;
+			
 			//create env file
-			fs.writeFile(relAddr,JSON.stringify(newEnvs),(err)=>{});
+			fs.writeFile(`/home/pi/code/hosted/${address}/.env`,newEnvs,(err)=>{});
 			
 			//full stack and react
 			if(dbInfo.fullStack && dbInfo.react){
-			
+			cmd.get(`
+					cd /home/pi/code/hosted/${address}
+					sudo npm i dotenv
+					sudo npm i
+					//forever start -c "npm start" ${relAddr}
+					`,()=>{}
+				);
 			}
 			//full stack no react
 			else if(dbInfo.fullStack && !dbInfo.react){
-				cmd.get(`forever start -c "npm start" ${relAddr}`,()=>{});
+				cmd.get(`
+					cd /home/pi/code/hosted/${address}
+					sudo npm i
+					//forever start -c "npm start" ${relAddr}
+					`,()=>{}
+				);
 			}
 			//front end and react
 			else if(!dbInfo.fullstack && dbInfo.react){
-			
-			}
+				cmd.get(`
+						cd /home/pi/code/hosted/${address}
+						sudo npm i
+						//forever start -c "npm start" ${relAddr}
+						`,()=>{}
+					);
+				}
 			//front end no react
 			else{
-			
-			}
+				cmd.get(`
+						sudo cp -r /home/pi/code/hosted/${address}/ /home/pi/code/hosted/${address}/public
+						sudo mv -r /home/pi/code/hosted/${address}/.git /home/pi/code/hosted/${address}/public/.git
+						sudo mv -r /home/pi/code/hosted/${address}/.vscode /home/pi/code/hosted/${address}/public/.vscode
+						sudo cp /home/pi/code/backendtemplate/* /home/pi/code/hosted/${address}
+						sudo cp -r /home/pi/code/backendtemplate/node_modules /home/pi/code/hosted/${address}/node_modules
+						sudo rm -rf /home/pi/code/hosted/${address}/.git
+						sudo rm -rf /home/pi/code/hosted/${address}/.vscode
+						cd /home/pi/code/hosted/${address}
+						forever start -c "npm start" ./
+						`,()=>{}
+					);
+				}
 		}
 	)
 	//git clone
@@ -113,7 +147,8 @@ function updateProject(dbInfo){
 	})	
 }
 
-proxy.register("hernoku.us/api/pushNotice","http://127.0.0.1:2998");
+proxy.register("hernoku.us/api/pushNotice","http://127.0.0.1:2998/");
+proxy.register("hernoku.us/api/delete","http://127.0.0.1:2998/delete");
 proxy.register("hernoku.us","localhost:3000");
 
 
