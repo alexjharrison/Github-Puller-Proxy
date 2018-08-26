@@ -4,6 +4,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cmd = require("node-cmd");
 const mysql = require("mysql2");
+const fs = require("fs");
 
 const PORT = 2998;
 
@@ -45,30 +46,17 @@ app.post("/",(req,res)=>{
 			console.log(results);
 			newDB ? addProject(results[0]) : updateProject(results[0]);
 		})	
-	},1500)
+	},1500);
 	
-	//new project added
-	if(!req.body.ref){
-		console.log("new");
-	}
-		//add route to proxy
 		//make sql db "username-projectname"
 		//make mongodb "username-projectname"
 		//git clone into ../"username-projectname"
-		//get port number from database
-		//add 1 to portnum in database
 		//add to envs port, production, mongo, sql address
 		//if front end
 			//copy project into /un-pn/public
 			//copy server template into username-projectname
 			//if react git clone 
 	
-	//new commit
-	else{
-		
-	}
-	//console.log("hi\n");
-	//console.log(req);
 	res.send("got it");
 })
 
@@ -80,12 +68,46 @@ connection.query(`SELECT * FROM counter`,(err, results) => {
 })	
 
 function addProject(dbInfo){
-	var address = dbInfo.username + "-" + dbInfo.repoName;
-	proxy.register(`${address}.hernoku.us`,`http://127.0.0.1:${portCount}`);
+	let address = dbInfo.username + "-" + dbInfo.repoName;
+	//proxy.register(`${address}.hernoku.us`,`http://127.0.0.1:${portCount}`);
+	//TODO add server info to envs
+	let newEnvs = dbInfo.envs + `\nPORT=${portCount}\nNODE_ENV=production`;
+	connection.query(`UPDATE Projects SET envs = "${newEnvs}" WHERE gitLink = "${dbInfo.gitLink}"`,(err,results)=>{});
+	cmd.get(`
+		cd ~/code/hosted
+		git clone ${dbInfo.gitLink}
+		mv ${dbInfo.repoName} address
+		`,
+		(err, data, stderr)=>{
+			const relAddr = `../hosted/${address}`;
+			//create env file
+			fs.writeFile(relAddr,JSON.stringify(newEnvs),(err)=>{});
+			
+			//full stack and react
+			if(dbInfo.fullStack && dbInfo.react){
+			
+			}
+			//full stack no react
+			else if(dbInfo.fullStack && !dbInfo.react){
+				cmd.get(`forever start -c "npm start" ${relAddr}`,()=>{});
+			}
+			//front end and react
+			else if(!dbInfo.fullstack && dbInfo.react){
+			
+			}
+			//front end no react
+			else{
+			
+			}
+		}
+	)
+	//git clone
+	//add an env
+
 }
 
 function updateProject(dbInfo){
-	var address = dbInfo.username + "-" + dbInfo.repoName;
+	let address = dbInfo.username + "-" + dbInfo.repoName;
 	connection.query(`SELECT * FROM Projects`).then((err,results)=>{
 		console.log("waited",results);
 	})	
