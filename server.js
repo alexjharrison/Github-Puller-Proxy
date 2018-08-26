@@ -36,25 +36,25 @@ app.post("/delete",(req,res)=>{
 app.post("/",(req,res)=>{
 	console.log(req.body.repository.name,req.body.sender.login);
 	
-	var repoName,username, newDB;
+  var repoName,username, newDB;
+  var branch = "";
+  repoName = req.body.repository.name;
+	username = req.body.sender.login;
 	if(!req.body.ref){
-		repoName = req.body.repository.name;
-		username = req.body.sender.login;
+		
 		newDB = true;
 		portCount++;
 		connection.query(`UPDATE counter SET count=${portCount} WHERE id=1`,(err,results)=>{});
 	}
 	else{
-		reponame = "";
-		username = req.body.sender.login;
-		newDB = false;
+		branch = req.body.ref.replace("refs/heads/","");
 	}
 	
 	setTimeout(()=>{
 		connection.query(`SELECT * FROM Projects WHERE repoName = "${repoName}" AND username = "${username}"`,(err, results) => {
 			if(err) console.log(err);
 			console.log(results);
-			newDB ? addProject(results[0]) : updateProject(results[0]);
+			branch ? updateProject(results[0],branch) : addProject(results[0]);
 		})	
 	},2000);
 	
@@ -145,11 +145,12 @@ function addProject(dbInfo){
 
 }
 
-function updateProject(dbInfo){
-	let address = dbInfo.username + "-" + dbInfo.repoName;
-	connection.query(`SELECT * FROM Projects`).then((err,results)=>{
-		console.log("waited",results);
-	})	
+function updateProject(dbInfo,branch){
+  //ghpages changes on front end and react
+  console.log("branch",branch);
+  if(!dbInfo.fullStack&&dbInfo.react&&branch!=="gh-pages") return;
+  else if(branch!=="master") return;
+  cmd.get(`sudo git pull origin ${branch} /home/pi/code/hosted/${dbInfo.username}-${dbInfo.repoName}/public/`,()=>{})
 }
 
 function startAllPrograms() {
