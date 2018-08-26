@@ -25,7 +25,12 @@ app.use(bodyParser.urlencoded({extended:true}));
 
 app.post("/delete",(req,res)=>{
 	console.log(req.body.proj);
-	cmd.get(`sudo rm -rf /home/pi/code/hosted/*-${req.body.proj}/ `,()=>{})
+	cmd.get(`
+		sudo rm -rf /home/pi/code/hosted/*-${req.body.proj}/ 
+		sudo forever stopall
+		`,()=>{
+			startAllPrograms();
+		})
 })
 
 app.post("/",(req,res)=>{
@@ -144,6 +149,21 @@ function updateProject(dbInfo){
 	let address = dbInfo.username + "-" + dbInfo.repoName;
 	connection.query(`SELECT * FROM Projects`).then((err,results)=>{
 		console.log("waited",results);
+	})	
+}
+
+function startAllPrograms() {
+	connection.query(`SELECT * FROM Projects`,(err, results) => {
+		if(err) console.log(err);
+		results.forEach(project=>{
+			//front end no react
+			if(!project.fullStack && !project.react){
+				cmd.get(`
+						forever start -c "npm start" /home/pi/code/hosted/${project.username}-${project.repoName}
+					`,()=>{}
+				);
+			}
+		})
 	})	
 }
 
