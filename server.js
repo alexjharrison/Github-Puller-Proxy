@@ -91,7 +91,9 @@ function addProject(dbInfo,branch){
 			console.log("data",data);
       console.log("error",err);
       console.log("branch: ",branch)
-      if()
+      if(branch==="gh-pages"){
+        cmd.get(`git checkout gh-pages`,()=>{});
+      }
 			const relAddr = `/home/pi/code/hosted/${address}/`;
 			
 			//create env file
