@@ -91,7 +91,7 @@ function addProject(dbInfo, branch) {
       console.log("data", data);
       console.log("error", err);
       console.log("branch: ", branch)
-      if (branch === "gh-pages") {
+      if (branch === "gh-pages" || (dbInfo.react&&!dbInfo.fullStack)) {
         cmd.get(`git checkout gh-pages`, () => {
           fs.writeFile(`/home/pi/code/hosted/${address}/.env`, newEnvs, (err) => { });
           cmd.get(`
