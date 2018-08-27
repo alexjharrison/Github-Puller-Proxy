@@ -147,11 +147,20 @@ function addProject(dbInfo){
 
 function updateProject(dbInfo,branch){
   //ghpages changes on front end and react
-  console.log("branch",branch);
+  console.log("branch ",branch);
   if(!dbInfo.fullStack&&dbInfo.react&&branch!=="gh-pages") return;
   else if(branch!=="master") return;
-  cmd.get(`sudo git pull origin ${branch} /home/pi/code/hosted/${dbInfo.username}-${dbInfo.repoName}/public/`,()=>{})
-}
+  cmd.get(`
+	cd /home/pi/code/hosted/${dbInfo.username}-${dbInfo.repoName}/public/
+	sudo forever stopall
+	sudo git pull origin ${branch}
+`,()=>{
+	console.log(`sudo git pull origin ${branch} /home/pi/code/hosted/${dbInfo.username}-${dbInfo.repoName}/public`)
+	console.log("restarting");
+	startAllPrograms();
+	});
+};
+
 
 function startAllPrograms() {
 	connection.query(`SELECT * FROM Projects`,(err, results) => {
