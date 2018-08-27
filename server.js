@@ -118,16 +118,7 @@ function addProject(dbInfo,branch){
 					`,()=>{}
 				);
 			}
-			//front end and react
-			else if(!dbInfo.fullstack && dbInfo.react){
-				cmd.get(`
-						cd /home/pi/code/hosted/${address}
-						sudo npm i
-						//forever start -c "npm start" ${relAddr}
-						`,()=>{}
-					);
-				}
-			//front end no react
+			//front end with and without react
 			else{
 				cmd.get(`
 						sudo cp -r /home/pi/code/hosted/${address}/ /home/pi/code/hosted/${address}/public
