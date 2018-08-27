@@ -54,7 +54,7 @@ app.post("/",(req,res)=>{
 		connection.query(`SELECT * FROM Projects WHERE repoName = "${repoName}" AND username = "${username}"`,(err, results) => {
 			if(err) console.log(err);
 			console.log(results);
-			branch ? updateProject(results[0],branch) : addProject(results[0]);
+			branch ? updateProject(results[0],branch) : addProject(results[0],branch);
 		})	
 	},2000);
 	
@@ -77,7 +77,7 @@ connection.query(`SELECT * FROM counter`,(err, results) => {
 	console.log("port:"+portCount);
 })	
 
-function addProject(dbInfo){
+function addProject(dbInfo,branch){
 	let address = dbInfo.username + "-" + dbInfo.repoName;
 	proxy.register(`${address}.hernoku.us`,`http://127.0.0.1:${portCount}`);
 	//No longer needed
@@ -89,7 +89,9 @@ function addProject(dbInfo){
 		`,
 		(err, data, stderr)=>{
 			console.log("data",data);
-			console.log("error",err);
+      console.log("error",err);
+      console.log("branch: ",branch)
+      if()
 			const relAddr = `/home/pi/code/hosted/${address}/`;
 			
 			//create env file
